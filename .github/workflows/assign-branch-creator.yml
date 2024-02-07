@@ -1,0 +1,30 @@
+name: Assign Branch Creator to Issue
+
+on:
+  create:
+    branches-ignore:
+      - 'main'
+      - 'master'
+      - 'develop'
+      
+jobs:
+  assign-creator:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Install Github CLI
+        run: |
+          sudo apt update
+          sudo apt install gh
+
+      - name: Extract issue number from branch name
+        run: echo "ISSUE_NUMBER=$(echo $GITHUB_REF | grep -oE '[0-9]+')" >> $GITHUB_ENV
+        env:
+          GITHUB_REF: ${{ github.ref }}
+
+      - name: Assign user to issue
+        run: gh issue edit $ISSUE_NUMBER --add-assignee "${{ github.actor }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
